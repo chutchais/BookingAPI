@@ -383,6 +383,22 @@ def db_ctcs_exp_get_booking(booking):
 			# -----------------------------
 			clean_d.update({'tariff_sum_total' : 0 if is_paid else sum_price })
 
+			# Add Terminal , on Aug 7,2020
+			# Agent ,Terminal
+			# XXX1 = LCB1 (B1)
+			# MSC  = LCB1 (B1)
+			# MSC0 = LCMT (A0)
+			terminal = 'LCMT'#default value
+			agent = clean_d.get('agent', '')
+			if '1' in agent :
+				terminal = 'LCB1'
+
+			if agent == 'MSC' :
+				terminal = 'LCB1'
+
+			clean_d.update({'terminal' :terminal })
+
+
 			results.append(dict(clean_d))
 
 		# print(results, file=sys.stdout)

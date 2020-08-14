@@ -256,9 +256,44 @@ def db_ctcs_get_payment(hdid10,cursor_ctcs):
 		return False
 	return True
 
+# def db_ctcs_exp_get_booking(booking):
+# 	from datetime import datetime
+# 	import decimal
+# 	cursor_ctcs = init_db()
+# 	cursor_ctcs.execute("select LTID02,HDID10,BTWI03 as cash,"\
+# 						"CNBT03 as full,"\
+# 						"CNHH03 as high,"\
+# 						"CNID10 as container,"\
+# 						"CNIS03 as iso,"\
+# 						"CNLL03 as size,"\
+# 						"CNTP03 as container_type,"\
+# 						"HDDT03,"\
+# 						"LTFS02 as status,"\
+# 						"LTSQ02,"\
+# 						"LTSR02 as direction,"\
+# 						"LYND05 as line,"\
+# 						"ORGV05 as agent,"\
+# 						"ORCD05 as date_in,"\
+# 						"ORCT05 as time_in,"\
+# 						"ORFS05 as status2,"\
+# 						"ORID05,"\
+# 						"OROP05 as comment,"\
+# 						"ORRF05 as booking,"\
+# 						"ORTP05 as in_by, "\
+# 						"VUVI02 as vessel_code,"\
+# 						"VURS02 as voy "\
+# 					"from lcb1net.ctordr11 "\
+# 					"where orrf05='" + booking + "' "\
+# 					"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' "\
+# 					"order by CNID10 ")
 def db_ctcs_exp_get_booking(booking):
 	from datetime import datetime
+	from datetime import timedelta
 	import decimal
+	#import datetime
+	last30day = datetime.now() - timedelta(days=30)
+	last30dayStr = last30day.strftime("%Y%m%d")
+	# print(last30dayStr)
 	cursor_ctcs = init_db()
 	cursor_ctcs.execute("select LTID02,HDID10,BTWI03 as cash,"\
 						"CNBT03 as full,"\
@@ -284,6 +319,7 @@ def db_ctcs_exp_get_booking(booking):
 						"VURS02 as voy "\
 					"from lcb1net.ctordr11 "\
 					"where orrf05='" + booking + "' "\
+					"and ORCD05 > '" + last30dayStr + "' "\
 					"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' "\
 					"order by CNID10 ")
 

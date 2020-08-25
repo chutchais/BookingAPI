@@ -291,7 +291,7 @@ def db_ctcs_exp_get_booking(booking):
 	from datetime import timedelta
 	import decimal
 	#import datetime
-	last30day = datetime.now() - timedelta(days=30)
+	last30day = datetime.now() - timedelta(days=60)
 	last30dayStr = last30day.strftime("%Y%m%d")
 	# print(last30dayStr)
 	cursor_ctcs = init_db()

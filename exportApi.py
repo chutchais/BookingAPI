@@ -160,6 +160,12 @@ def db_ctcs_get_gatein(bzid01,cursor_ctcs):
 	date_in_str = str(clean_d.get("date_in", None))
 	time_in_str = str(clean_d.get("time_in", None))
 	date_in_date = datetime(int(date_in_str[:4]),int(date_in_str[4:6]),int(date_in_str[-2:]))
+	
+	# Added on Sep 22,2020 -- To fix time on midnigth
+	hour_in=0
+	minute_in=0
+	second_in=0
+	# ----------------------------------------------
 	if len(time_in_str) == 6 :
 		hour_in = int(time_in_str[:2])
 		minute_in = int(time_in_str[2:4])

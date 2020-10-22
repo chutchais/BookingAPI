@@ -345,7 +345,7 @@ def db_nsw_imp_get_bl(number):
 		results = []
 		for row in rows:
 			clean_d = { k:v.strip() for k, v in zip(columns,row) if isinstance(v, str)}
-			container_info = db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,clean_d['container'],'short')
+			container_info = db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,clean_d['container'],'full')
 			results.append(container_info)
 		# print(results, file=sys.stdout)
 		return results

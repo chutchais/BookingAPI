@@ -484,8 +484,7 @@ def db_ctcs_exp_get_container(container):
 					"from lcb1net.ctordr11 "\
 					"where CNID10 ='" + container + "' "\
 					"and ORCD05 > '" + last30dayStr + "' "\
-					"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' "\
-					"order by ORCD05 ")
+					"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' ")
 
 	rows = cursor_ctcs.fetchall()
 	columns = [column[0].lower() for column in cursor_ctcs.description]
@@ -605,6 +604,6 @@ def db_ctcs_exp_get_container(container):
 		return results
 
 
-# if __name__ == "__main__":
-# 	app.run(host='127.0.0.1', port=5001)
-	# app.run()
+if __name__ == "__main__":
+	app.run(host='0.0.0.0', port=5002)
+	app.run()

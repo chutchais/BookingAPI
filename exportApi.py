@@ -423,8 +423,16 @@ def db_ctcs_exp_get_booking(booking):
 			# TODO -- check Continer is OOG
 			
 			clean_d.update({'oog' :is_oog })
+
+			# Added on Dec 22,2020 -- To set tariff_sum_total = 0 ,incase payment term is Credit (cash==N)
+			is_credit = False
+			if str(clean_d.get("cash", None)) != 'Y':
+				is_credit = True
+
+			clean_d.update({'tariff_sum_total' : 0 if is_paid or is_credit  else sum_price })
 			# -----------------------------
-			clean_d.update({'tariff_sum_total' : 0 if is_paid else sum_price })
+			# clean_d.update({'tariff_sum_total' : 0 if is_paid else sum_price })
+
 
 			# Add Terminal , on Aug 7,2020
 			# Agent ,Terminal

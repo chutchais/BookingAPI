@@ -279,10 +279,14 @@ def db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,number,mode='full'):
 							"TotalgrossweightInfo_unitcode unit_gross,"\
 							"TotalPackageInfo_amount amount,"\
 							"TotalPackageInfo_unitcode unit_amount,recordtime,lastentry, "\
+							"MeasurementInfo_Measurement meas,MeasurementInfo_unitcode unit_meas,"\
+							"ShipperInfo_Name,ShipperInfo_NameAndAddress,"\
+                        	"ConsigneeInfo_Name,ConsigneeInfo_NameAndAddress,"\
 							"portofdischarge,placeofdelivery,containerdetail_status,shedNumberReleasePort "\
 							"FROM  mman "\
 							"where containerdetail_number = '"+ number +"' "\
 							"order by recordtime desc")
+							# descriptionOfGoods,
 	else:
 		cursor_nsw.execute("select masterbl as bill_of_landing,"\
 							"containerdetail_number as container,"\

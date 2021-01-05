@@ -258,6 +258,78 @@ def db_ctcs_imp_get_out_info(cursor_ctcs,number,handleid):
 
 
 
+# def db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,number,mode='full'):
+
+# 	# Case "4" : vStatus = "MTY"
+#  #            Case "7" : vStatus = "LCL"
+#  #            Case "8" : vStatus = "FCL"
+#  #            Case "9" : vStatus = "LCL/CFS"
+#  # shedNumberReleasePort
+#  # 2835--A0
+#  # 2811 -- B1
+# 	# cursor_ctcs,cursor_nsw = init_db()
+# 	if mode == 'full':
+# 		cursor_nsw.execute("select masterbl as bill_of_landing,"\
+# 							"containerdetail_number as container,"\
+# 							"callsign,"\
+# 							"voyagenumber as voy,"\
+# 							"berthdate,"\
+# 							"consigneeinfo_name,"\
+# 							"TotalgrossweightInfo_weight gross,"\
+# 							"TotalgrossweightInfo_unitcode unit_gross,"\
+# 							"TotalPackageInfo_amount amount,"\
+# 							"TotalPackageInfo_unitcode unit_amount,recordtime,lastentry, "\
+# 							"MeasurementInfo_Measurement meas,MeasurementInfo_unitcode unit_meas,"\
+# 							"ShipperInfo_Name,ShipperInfo_NameAndAddress,"\
+#                         	"ConsigneeInfo_Name,ConsigneeInfo_NameAndAddress,"\
+# 							"portofdischarge,placeofdelivery,containerdetail_status,shedNumberReleasePort "\
+# 							"FROM  mman "\
+# 							"where containerdetail_number = '"+ number +"' "\
+# 							"order by recordtime desc")
+# 							# descriptionOfGoods,
+# 	else:
+# 		cursor_nsw.execute("select masterbl as bill_of_landing,"\
+# 							"containerdetail_number as container,"\
+# 							"voyagenumber as voy,"\
+# 							"berthdate "\
+# 							"FROM  mman "\
+# 							"where containerdetail_number = '"+ number +"' "\
+# 							"order by recordtime desc")
+
+# 	rows = cursor_nsw.fetchall()
+# 	columns = [column[0] for column in cursor_nsw.description]
+# 	delivery_info={}
+# 	dis_info = {}
+# 	if rows:
+# 		dict_data = dict(zip(columns,rows[0]))
+# 		# Get Discharge info
+# 		voy = dict_data['voy']
+# 		dis_info = db_ctcs_imp_get_discharge_info(cursor_ctcs,number,voy,mode)
+# 		# print(dis_info)
+# 		if dis_info != None :
+# 			handle_id = dis_info['hdra03']
+# 			# Get delivery information
+# 			delivery_info = db_ctcs_imp_get_out_info(cursor_ctcs,number,str(handle_id))
+# 			dict_data.update({'on_yard': 1})
+# 		else:
+# 			dis_info={}
+# 			dict_data.update({'on_yard': 0})
+
+# 		# Update data with Discharge and Delivery information
+# 		dict_data.update({'discharge': dis_info})
+# 		dict_data.update({'delivery': delivery_info})
+
+
+# 		dict_data.update({'total': 0})
+# 		dict_data.update({'lolo': 0})
+# 		dict_data.update({'relo': 0})
+# 		dict_data.update({'rate1': 0})
+# 		dict_data.update({'rate2': 0})
+# 		dict_data.update({'rate3': 0})
+# 		# Remain CFS data
+# 		return dict_data
+
+# Modify on Jan 5,2021 -- To support CFS (One contiainer on multiple BL)
 def db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,number,mode='full'):
 
 	# Case "4" : vStatus = "MTY"
@@ -267,6 +339,19 @@ def db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,number,mode='full'):
  # shedNumberReleasePort
  # 2835--A0
  # 2811 -- B1
+	# Get Latest record to find latest VOY
+	cursor_nsw.execute("select voyagenumber as voy "\
+					"FROM  mman "\
+					"where containerdetail_number = '"+ number +"' "\
+					"order by recordtime desc")
+	rows = cursor_nsw.fetchone()
+	voy=''
+	if rows :
+		print(f'VOY : {rows[0]}')
+		voy = rows[0]
+	else :
+		return null
+
 	# cursor_ctcs,cursor_nsw = init_db()
 	if mode == 'full':
 		cursor_nsw.execute("select masterbl as bill_of_landing,"\
@@ -284,7 +369,7 @@ def db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,number,mode='full'):
                         	"ConsigneeInfo_Name,ConsigneeInfo_NameAndAddress,"\
 							"portofdischarge,placeofdelivery,containerdetail_status,shedNumberReleasePort "\
 							"FROM  mman "\
-							"where containerdetail_number = '"+ number +"' "\
+							"where containerdetail_number = '"+ number +"' and voyagenumber='" + voy +"' "\
 							"order by recordtime desc")
 							# descriptionOfGoods,
 	else:
@@ -293,9 +378,66 @@ def db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,number,mode='full'):
 							"voyagenumber as voy,"\
 							"berthdate "\
 							"FROM  mman "\
-							"where containerdetail_number = '"+ number +"' "\
+							"where containerdetail_number = '"+ number +"' and voyagenumber='" + voy +"' "\
 							"order by recordtime desc")
 
+	rows = cursor_nsw.fetchall()
+	columns = [column[0] for column in cursor_nsw.description]
+	delivery_info={}
+	dis_info = {}
+		
+	if rows:
+		results = []
+		for row in rows:
+			dict_data = dict(zip(columns,row))
+			# Get Discharge info
+			voy = dict_data['voy']
+			dis_info = db_ctcs_imp_get_discharge_info(cursor_ctcs,number,voy,mode)
+			# print(dis_info)
+			if dis_info != None :
+				handle_id = dis_info['hdra03']
+				# Get delivery information
+				delivery_info = db_ctcs_imp_get_out_info(cursor_ctcs,number,str(handle_id))
+				dict_data.update({'on_yard': 1})
+			else:
+				dis_info={}
+				dict_data.update({'on_yard': 0})
+
+			# Update data with Discharge and Delivery information
+			dict_data.update({'discharge': dis_info})
+			dict_data.update({'delivery': delivery_info})
+
+
+			dict_data.update({'total': 0})
+			dict_data.update({'lolo': 0})
+			dict_data.update({'relo': 0})
+			dict_data.update({'rate1': 0})
+			dict_data.update({'rate2': 0})
+			dict_data.update({'rate3': 0})
+			# Remain CFS data
+			results.append(dict_data)
+		return results
+
+# Added on Jan 5,2021 -- To support CFS , One container on multiple BL
+def db_nsw_imp_get_container_bl(cursor_ctcs,cursor_nsw,number,bl):
+	mode='full'
+	cursor_nsw.execute("select masterbl as bill_of_landing,"\
+						"containerdetail_number as container,"\
+						"callsign,"\
+						"voyagenumber as voy,"\
+						"berthdate,"\
+						"consigneeinfo_name,"\
+						"TotalgrossweightInfo_weight gross,"\
+						"TotalgrossweightInfo_unitcode unit_gross,"\
+						"TotalPackageInfo_amount amount,"\
+						"TotalPackageInfo_unitcode unit_amount,recordtime,lastentry, "\
+						"MeasurementInfo_Measurement meas,MeasurementInfo_unitcode unit_meas,"\
+						"ShipperInfo_Name,ShipperInfo_NameAndAddress,"\
+						"ConsigneeInfo_Name,ConsigneeInfo_NameAndAddress,"\
+						"portofdischarge,placeofdelivery,containerdetail_status,shedNumberReleasePort "\
+						"FROM  mman "\
+						"where containerdetail_number = '"+ number +"' and masterbl ='" + bl + "' "\
+						"order by recordtime desc")
 	rows = cursor_nsw.fetchall()
 	columns = [column[0] for column in cursor_nsw.description]
 	delivery_info={}
@@ -337,11 +479,17 @@ def db_nsw_imp_get_bl(number):
 	# 					"where masterbl = '"+ number +"' "\
 	# 					"order by containerdetail_number,recordtime")
 	cursor_ctcs,cursor_nsw = init_db()
+	# cursor_nsw.execute("select	masterbl as booking,"\
+	# 					"containerdetail_number as container "\
+	# 					"FROM  mman "\
+	# 					"where masterbl = '" + number + "' "\
+	# 					"group by masterbl,containerdetail_number")
+	
 	cursor_nsw.execute("select	masterbl as booking,"\
 						"containerdetail_number as container "\
 						"FROM  mman "\
-						"where masterbl = '" + number + "' "\
-						"group by masterbl,containerdetail_number")
+						"where masterbl = '" + number + "' ")
+
 	rows = cursor_nsw.fetchall()
 	columns = [column[0].lower() for column in cursor_nsw.description]
 	# print(columns, file=sys.stdout)
@@ -349,7 +497,7 @@ def db_nsw_imp_get_bl(number):
 		results = []
 		for row in rows:
 			clean_d = { k:v.strip() for k, v in zip(columns,row) if isinstance(v, str)}
-			container_info = db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,clean_d['container'],'full')
+			container_info = db_nsw_imp_get_container_bl(cursor_ctcs,cursor_nsw,clean_d['container'],number)
 			results.append(container_info)
 		# print(results, file=sys.stdout)
 		return results

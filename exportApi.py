@@ -131,12 +131,14 @@ def db_ctcs_get_pod(hdid10,cursor_ctcs):
 						"VUPO02 as port_name "\
 						"FROM LCB1NET.CTLTHD02 WHERE HDID10=" + hdid10 )
 	row = cursor_ctcs.fetchone()
-	columns = [column[0].lower() for column in cursor_ctcs.description]
-	clean_d = { k:v.strip() for k, v in zip(columns,row) if isinstance(v, str)}
-	clean_date = { k:v for k, v in zip(columns,row) if isinstance(v, decimal.Decimal)}
-	clean_d.update(clean_date)
-	# print(dict(clean_d), file=sys.stdout)
+	# Modify on Jan 5,2021 -- To fix in case no rows returned.
 	if row != None:
+		columns = [column[0].lower() for column in cursor_ctcs.description]
+		clean_d = { k:v.strip() for k, v in zip(columns,row) if isinstance(v, str)}
+		clean_date = { k:v for k, v in zip(columns,row) if isinstance(v, decimal.Decimal)}
+		clean_d.update(clean_date)
+	# print(dict(clean_d), file=sys.stdout)
+	# if row != None:
 		return dict(clean_d)
 	return ''
 

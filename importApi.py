@@ -469,6 +469,8 @@ def db_nsw_imp_get_container_bl(cursor_ctcs,cursor_nsw,number,bl):
 		dict_data.update({'rate2': 0})
 		dict_data.update({'rate3': 0})
 		# Remain CFS data
+		dict_data.update({'unstuffing': 0})
+		dict_data.update({'extra': 0})
 		return dict_data
 
 def db_nsw_imp_get_bl(number):

@@ -481,16 +481,16 @@ def db_nsw_imp_get_bl(number):
 	# 					"where masterbl = '"+ number +"' "\
 	# 					"order by containerdetail_number,recordtime")
 	cursor_ctcs,cursor_nsw = init_db()
-	# cursor_nsw.execute("select	masterbl as booking,"\
-	# 					"containerdetail_number as container "\
-	# 					"FROM  mman "\
-	# 					"where masterbl = '" + number + "' "\
-	# 					"group by masterbl,containerdetail_number")
-	
 	cursor_nsw.execute("select	masterbl as booking,"\
 						"containerdetail_number as container "\
 						"FROM  mman "\
-						"where masterbl = '" + number + "' ")
+						"where masterbl = '" + number + "' "\
+						"group by masterbl,containerdetail_number")
+	
+	# cursor_nsw.execute("select	masterbl as booking,"\
+	# 					"containerdetail_number as container "\
+	# 					"FROM  mman "\
+	# 					"where masterbl = '" + number + "' ")
 
 	rows = cursor_nsw.fetchall()
 	columns = [column[0].lower() for column in cursor_nsw.description]

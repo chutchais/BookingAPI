@@ -414,6 +414,9 @@ def db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,number,mode='full'):
 			dict_data.update({'rate1': 0})
 			dict_data.update({'rate2': 0})
 			dict_data.update({'rate3': 0})
+			# Added on Jan 19,2021 -- TO support CFS
+			dict_data.update({'unstuffing': 0})
+			dict_data.update({'wharf': 0})
 			# Remain CFS data
 			results.append(dict_data)
 		return results

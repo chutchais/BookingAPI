@@ -56,6 +56,7 @@ def hello():
 @app.route('/container/<container>')
 def get_imp_container_info(container):
 	cursor_ctcs,cursor_nsw = init_db()
+	print(f'Get container : {container}')
 	Objects = db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,container,'full')
 	response=jsonify(Objects)
 	response.headers.add('Access-Control-Allow-Origin', '*')
@@ -77,6 +78,7 @@ def get_imp_container_info(container):
 
 @app.route('/bl/<bl>')
 def get_nsw_imp_bl_info(bl):
+	print(f'Get Bill of Ladding : {bl}')
 	Objects = db_nsw_imp_get_bl(bl)
 	response=jsonify(Objects)
 	response.headers.add('Access-Control-Allow-Origin', '*')
@@ -86,7 +88,7 @@ def get_nsw_imp_bl_info(bl):
 def query_execute(cursor_ctcs,number,voy,mode='full'):
 	for retry in range(3):
 		try :
-			print ('Execute %s' % retry)
+			# print ('Execute %s' % retry)
 			if mode =='full':
 				cursor_ctcs.execute("select "\
 							"CNID03 as container,"\
@@ -115,7 +117,7 @@ def query_execute(cursor_ctcs,number,voy,mode='full'):
 							"FROM S2114C2V.LCB1DAT.DISCHARGE DISCHARGE "\
 							"where DISCHARGE.CNID03 = '"+ number +"' and RSIN01='"+ voy + "' "\
 							"order by DISCHARGE.HDDT03 desc")
-			print ('Fetch all ROW')
+			# print ('Fetch all ROW')
 			rows = cursor_ctcs.fetchall()
 			break
 		except :

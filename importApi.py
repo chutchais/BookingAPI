@@ -352,7 +352,8 @@ def db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,number,mode='full'):
 		print(f'VOY : {rows[0]}')
 		voy = rows[0]
 	else :
-		return null
+		# Change return null to return [] , on Feb 6,2021
+		return []
 
 	# cursor_ctcs,cursor_nsw = init_db()
 	if mode == 'full':

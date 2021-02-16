@@ -401,7 +401,10 @@ def db_ctcs_exp_get_booking(booking):
 			load = db_ctcs_get_load(hidid,cursor_ctcs)
 			# print('POD Data ' + str(pod.get('bzid10',None)) , file=sys.stdout)
 			truck_in = {}
-			if pod.get('bzid10',None) != 0 :
+
+			# Modify on Feb 16,2021 -- To fix error incase POD returned '',
+			# if pod.get('bzid10',None) != 0 :
+			if pod != '' :
 				truck_in = db_ctcs_get_gatein(str(pod.get('bzid10',None)),cursor_ctcs)
 			clean_d = { k:v.strip() for k, v in zip(columns,row) if isinstance(v, str)}
 			

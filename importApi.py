@@ -449,6 +449,7 @@ def db_nsw_imp_get_container_bl(cursor_ctcs,cursor_nsw,number,bl):
 	delivery_info={}
 	dis_info = {}
 	if rows:
+		is_paid = False
 		dict_data = dict(zip(columns,rows[0]))
 		# Get Discharge info
 		voy = dict_data['voy']
@@ -459,6 +460,9 @@ def db_nsw_imp_get_container_bl(cursor_ctcs,cursor_nsw,number,bl):
 			# Get delivery information
 			delivery_info = db_ctcs_imp_get_out_info(cursor_ctcs,number,str(handle_id))
 			dict_data.update({'on_yard': 1})
+
+			# Check Payment (paid) by Chutchai on March 2,2021
+			is_paid = db_ctcs_get_payment(cursor_ctcs,bl,number)
 		else:
 			dis_info={}
 			dict_data.update({'on_yard': 0})
@@ -477,6 +481,9 @@ def db_nsw_imp_get_container_bl(cursor_ctcs,cursor_nsw,number,bl):
 		# Remain CFS data
 		dict_data.update({'unstuffing': 0})
 		dict_data.update({'extra': 0})
+
+		# Check Payment (paid) by Chutchai on March 2,2021
+		dict_data.update({'paid': is_paid})
 		return dict_data
 
 def db_nsw_imp_get_bl(number):
@@ -510,6 +517,17 @@ def db_nsw_imp_get_bl(number):
 		# print(results, file=sys.stdout)
 		return results
 ##############################################################
+
+# Added on March 2,2021 -- To get payment status (Paid or Not paid)
+def db_ctcs_get_payment(cursor_ctcs,order,container):
+	cursor_ctcs.execute("select 1 "\
+						"from LCB1DAT.GAGTID02  "\
+						"where ORRF93='" + order + "' and CNID94='" + container + "' ")
+	row = cursor_ctcs.fetchone()
+	# print(row)
+	if row == None:
+		return False
+	return True
 
 
 # if __name__ == "__main__":

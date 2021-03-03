@@ -304,87 +304,88 @@ def db_ctcs_exp_get_booking(booking):
 	last30dayStr = last30day.strftime("%Y%m%d")
 	# print(last30dayStr)
 	cursor_ctcs = init_db()
-	# Added on Feb 4,2021 -- To get latest vessel/voy
-	cursor_ctcs.execute("select max(ORCD05) as date_in "\
-					"from lcb1net.ctordr11 "\
-					"where orrf05='" + booking + "' "\
-					"and ORCD05 > '" + last30dayStr + "' "\
-					"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' ")
-	max_date = cursor_ctcs.fetchone()
-	# print(max_date)
-	if max_date[0] == None :
-		return []
-
-	max_date_str = str(max_date[0])
-	cursor_ctcs.execute("select ORCD05 as date_in, "\
-					"VUVI02 as vessel_code,"\
-					"VURS02 as voy "\
-					"from lcb1net.ctordr11 "\
-					"where orrf05='" + booking + "' "\
-					"and ORCD05 = '" + max_date_str + "' "\
-					"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' ")
-	
-	latest_record = cursor_ctcs.fetchone()
-	latest_vessel = latest_record[1].strip()
-	latest_voy = latest_record[2].strip()
-	print(f'Latest Vesel/Voy of {booking} is {latest_vessel}/{latest_voy} ')
-	# ----------------------------------------------
-	# Change Query to get based on Booking and Vessel and Voy
-	cursor_ctcs.execute("select LTID02,HDID10,BTWI03 as cash,"\
-					"CNBT03 as full,"\
-					"CNHH03 as high,"\
-					"CNID10 as container,"\
-					"CNIS03 as iso,"\
-					"CNLL03 as size,"\
-					"CNTP03 as container_type,"\
-					"HDDT03,"\
-					"LTFS02 as status,"\
-					"LTSQ02,"\
-					"LTSR02 as direction,"\
-					"LYND05 as line,"\
-					"ORGV05 as agent,"\
-					"ORCD05 as date_in,"\
-					"ORCT05 as time_in,"\
-					"ORFS05 as status2,"\
-					"ORID05,"\
-					"OROP05 as comment,"\
-					"ORRF05 as booking,"\
-					"ORTP05 as in_by, "\
-					"VUVI02 as vessel_code,"\
-					"VURS02 as voy "\
-				"from lcb1net.ctordr11 "\
-				"where orrf05='" + booking + "' "\
-				"and VUVI02 ='" + latest_vessel + "' "\
-				"and VURS02 ='" + latest_voy + "' "\
-				"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' "\
-				"order by CNID10 ")
-	# cursor_ctcs.execute("select LTID02,HDID10,BTWI03 as cash,"\
-	# 					"CNBT03 as full,"\
-	# 					"CNHH03 as high,"\
-	# 					"CNID10 as container,"\
-	# 					"CNIS03 as iso,"\
-	# 					"CNLL03 as size,"\
-	# 					"CNTP03 as container_type,"\
-	# 					"HDDT03,"\
-	# 					"LTFS02 as status,"\
-	# 					"LTSQ02,"\
-	# 					"LTSR02 as direction,"\
-	# 					"LYND05 as line,"\
-	# 					"ORGV05 as agent,"\
-	# 					"ORCD05 as date_in,"\
-	# 					"ORCT05 as time_in,"\
-	# 					"ORFS05 as status2,"\
-	# 					"ORID05,"\
-	# 					"OROP05 as comment,"\
-	# 					"ORRF05 as booking,"\
-	# 					"ORTP05 as in_by, "\
-	# 					"VUVI02 as vessel_code,"\
-	# 					"VURS02 as voy "\
+	# # Added on Feb 4,2021 -- To get latest vessel/voy
+	# cursor_ctcs.execute("select max(ORCD05) as date_in "\
 	# 				"from lcb1net.ctordr11 "\
 	# 				"where orrf05='" + booking + "' "\
 	# 				"and ORCD05 > '" + last30dayStr + "' "\
-	# 				"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' "\
-	# 				"order by CNID10 ")
+	# 				"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' ")
+	# max_date = cursor_ctcs.fetchone()
+	# # print(max_date)
+	# if max_date[0] == None :
+	# 	return []
+
+	# max_date_str = str(max_date[0])
+	# cursor_ctcs.execute("select ORCD05 as date_in, "\
+	# 				"VUVI02 as vessel_code,"\
+	# 				"VURS02 as voy "\
+	# 				"from lcb1net.ctordr11 "\
+	# 				"where orrf05='" + booking + "' "\
+	# 				"and ORCD05 = '" + max_date_str + "' "\
+	# 				"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' ")
+	
+	# latest_record = cursor_ctcs.fetchone()
+	# latest_vessel = latest_record[1].strip()
+	# latest_voy = latest_record[2].strip()
+	# print(f'Latest Vesel/Voy of {booking} is {latest_vessel}/{latest_voy} ')
+	# # ----------------------------------------------
+	# # Change Query to get based on Booking and Vessel and Voy
+	# cursor_ctcs.execute("select LTID02,HDID10,BTWI03 as cash,"\
+	# 				"CNBT03 as full,"\
+	# 				"CNHH03 as high,"\
+	# 				"CNID10 as container,"\
+	# 				"CNIS03 as iso,"\
+	# 				"CNLL03 as size,"\
+	# 				"CNTP03 as container_type,"\
+	# 				"HDDT03,"\
+	# 				"LTFS02 as status,"\
+	# 				"LTSQ02,"\
+	# 				"LTSR02 as direction,"\
+	# 				"LYND05 as line,"\
+	# 				"ORGV05 as agent,"\
+	# 				"ORCD05 as date_in,"\
+	# 				"ORCT05 as time_in,"\
+	# 				"ORFS05 as status2,"\
+	# 				"ORID05,"\
+	# 				"OROP05 as comment,"\
+	# 				"ORRF05 as booking,"\
+	# 				"ORTP05 as in_by, "\
+	# 				"VUVI02 as vessel_code,"\
+	# 				"VURS02 as voy "\
+	# 			"from lcb1net.ctordr11 "\
+	# 			"where orrf05='" + booking + "' "\
+	# 			"and VUVI02 ='" + latest_vessel + "' "\
+	# 			"and VURS02 ='" + latest_voy + "' "\
+	# 			"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' "\
+	# 			"order by CNID10 ")
+	print(f'Getting :{booking}')
+	cursor_ctcs.execute("select LTID02,HDID10,BTWI03 as cash,"\
+						"CNBT03 as full,"\
+						"CNHH03 as high,"\
+						"CNID10 as container,"\
+						"CNIS03 as iso,"\
+						"CNLL03 as size,"\
+						"CNTP03 as container_type,"\
+						"HDDT03,"\
+						"LTFS02 as status,"\
+						"LTSQ02,"\
+						"LTSR02 as direction,"\
+						"LYND05 as line,"\
+						"ORGV05 as agent,"\
+						"ORCD05 as date_in,"\
+						"ORCT05 as time_in,"\
+						"ORFS05 as status2,"\
+						"ORID05,"\
+						"OROP05 as comment,"\
+						"ORRF05 as booking,"\
+						"ORTP05 as in_by, "\
+						"VUVI02 as vessel_code,"\
+						"VURS02 as voy "\
+					"from lcb1net.ctordr11 "\
+					"where orrf05='" + booking + "' "\
+					"and ORCD05 > '" + last30dayStr + "' "\
+					"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' "\
+					"order by CNID10 ")
 
 	rows = cursor_ctcs.fetchall()
 	columns = [column[0].lower() for column in cursor_ctcs.description]

@@ -9,6 +9,8 @@ import json
 import pyodbc
 import urllib3
 
+import redis
+
 
 class CustomJSONEncoder(JSONEncoder):
 
@@ -31,6 +33,11 @@ class CustomJSONEncoder(JSONEncoder):
 app = Flask(__name__)
 app.json_encoder = CustomJSONEncoder
 app.debug = True
+
+# Added on March 3,2021 -- To enable cach (redis)
+
+db = redis.StrictRedis('localhost', 6379,db=0, charset="utf-8", decode_responses=True) #Production
+
 
 #setup db connection to sql server
 def init_db():
@@ -55,7 +62,27 @@ def get_nsw_exp_container_info(container):
 
 @app.route('/booking/<booking>')
 def get_nsw_emp_booking_info(booking):
-	Objects = db_ctcs_exp_get_booking(booking)
+	if booking =='':
+		return []
+	# Added on March 3,2021 -- To read from cache
+	from datetime import datetime
+	now = datetime.now() # current date and time
+	date_time = now.strftime("%Y-%m-%d %H:%M:%S")
+	key =f'{booking}'
+	booking_data = db.get(key)
+	if booking_data:
+		# if found then return
+		print(f'{date_time} Getting Booking :{booking} from cache')
+		Objects = json.loads(booking_data)
+	else:
+		print(f'{date_time} Getting Booking :{booking}')
+		Objects = db_ctcs_exp_get_booking(booking)
+		# save db
+		ttl=60*3 #3 mins
+		db.set(booking,json.dumps(Objects,cls=CustomJSONEncoder))
+		db.expire(booking, ttl)
+
+
 	response=jsonify(Objects)
 	response.headers.add('Access-Control-Allow-Origin', '*')
 	return response
@@ -294,6 +321,12 @@ def db_ctcs_get_payment(hdid10,cursor_ctcs):
 # 					"where orrf05='" + booking + "' "\
 # 					"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' "\
 # 					"order by CNID10 ")
+def setKey(key,json):
+	return db.set(key,json.dumps(json))
+
+def getKey(key):
+	return db.get(key)
+
 def db_ctcs_exp_get_booking(booking):
 	from datetime import datetime
 	from datetime import timedelta
@@ -358,7 +391,7 @@ def db_ctcs_exp_get_booking(booking):
 	# 			"and VURS02 ='" + latest_voy + "' "\
 	# 			"and ortp05 in ('BKG','FOT','MTI','CNA') and ORFS05 <>'CAN' "\
 	# 			"order by CNID10 ")
-	print(f'Getting :{booking}')
+	# print(f'Getting :{booking}')
 	cursor_ctcs.execute("select LTID02,HDID10,BTWI03 as cash,"\
 						"CNBT03 as full,"\
 						"CNHH03 as high,"\
@@ -513,6 +546,7 @@ def db_ctcs_exp_get_booking(booking):
 			results.append(dict(clean_d))
 
 		# print(results, file=sys.stdout)
+
 		return results
 
 
@@ -673,6 +707,62 @@ def db_ctcs_exp_get_container(container):
 		# print(results, file=sys.stdout)
 		return results
 
+# Added on March 3,2021 -- To enable cach
+def get_booking_and_save_to_db(booking):
+	try:
+		res = requests.get(f"{URL_BOOKING}{booking}")
+		# Save to Database
+		ttl = 60*60*6 #6 hours , 60*60*3
+		first_container = True
+		for container in res.json():
+			if first_container :
+				# 1) Create Booking
+				key = f"{booking}"
+				db.set(key,key) 
+				db.expire(key, ttl)
+				# 2_ QTY     (key = BOOKING:QTY:number) 
+				key = f"{booking}:QTY"
+				db.set(key,len(res.json())) 
+				db.expire(key, ttl)
+				# 3) Vessel  (key = BOOKING:VESSEL:vessel)
+				key = f"{booking}:VESSEL"
+				db.set(key,container['vessel_code']) 
+				db.expire(key, ttl)
+				# 4) Voy     (key = BOOKING:VOY:voy)
+				key = f"{booking}:VOY"
+				db.set(key,container['voy']) 
+				db.expire(key, ttl)
+				# 5) ETB     (key = BOOKING:VESSEL:etb)
+				key = f"{booking}:VESSEL:ETB"
+				etb = getETB(container['vessel_code'],container['voy'])
+				db.set(key,etb) 
+				db.expire(key, ttl)
+
+				# 6) Save Json     (key = BOOKING:JSON)
+				key = f"{booking}:JSON"
+				db.set(key,json.dumps(res.json())) 
+				db.expire(key, ttl)
+
+				#7)Added Reserved on Oct 2,2020
+
+				# Modify on Oct 7,2020 -- To update RESERVED in case exist. 
+				key = f"{booking}:RESERVED"
+				if db.get(key) == None :
+					db.set(key,0) 
+					db.expire(key, ttl)
+
+
+				first_container = False
+
+			# 6) Container (key = BOOKING:CONTAINER:container)
+			key = f"{booking}:CONTAINER:{container['container']}"
+			db.set(key,container['container']) #store dict in a hashjson.dumps(json_data)
+			db.expire(key, ttl) #expire it after 6 hours
+		# print (f'Booking container count {len(res.json())}')
+		return len(res.json())
+	except Exception as e:
+		# print ('Pulling booking data Error')
+		return 0
 
 # if __name__ == "__main__":
 # 	app.run(host='127.0.0.1', port=5001)

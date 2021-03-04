@@ -7,6 +7,7 @@ from flask import jsonify
 import sys
 import json
 import pyodbc
+import redis
 
 
 
@@ -28,6 +29,9 @@ class CustomJSONEncoder(JSONEncoder):
 app = Flask(__name__)
 app.json_encoder = CustomJSONEncoder
 app.debug = True
+
+# Added on March 3,2021 -- To enable cach (redis)
+db = redis.StrictRedis('localhost', 6379,db=1, charset="utf-8", decode_responses=True) #Production
 
 #setup db connection to sql server
 def init_db():
@@ -55,9 +59,26 @@ def hello():
 ############## Import ######################### 
 @app.route('/container/<container>')
 def get_imp_container_info(container):
-	cursor_ctcs,cursor_nsw = init_db()
-	print(f'Get container : {container}')
-	Objects = db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,container,'full')
+	# Added on March 3,2021 -- To read from cache
+	from datetime import datetime
+	now = datetime.now() # current date and time
+	date_time = now.strftime("%Y-%m-%d %H:%M:%S")
+	key =f'{container}'
+	container_data = db.get(key)
+	if container_data:
+		# if found then return
+		print(f'{date_time} Getting Container :{container} from cache')
+		Objects = json.loads(container_data)
+	else:
+		print(f'{date_time} Getting Container :{container}')
+		cursor_ctcs,cursor_nsw = init_db()
+		Objects = db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,container,'full')
+		# save db
+		ttl=60*3 #3 mins
+		db.set(container,json.dumps(Objects,cls=CustomJSONEncoder))
+		db.expire(container, ttl)
+
+	
 	response=jsonify(Objects)
 	response.headers.add('Access-Control-Allow-Origin', '*')
 	return response
@@ -78,8 +99,25 @@ def get_imp_container_info(container):
 
 @app.route('/bl/<bl>')
 def get_nsw_imp_bl_info(bl):
-	print(f'Get Bill of Ladding : {bl}')
-	Objects = db_nsw_imp_get_bl(bl)
+	# Added on March 3,2021 -- To read from cache
+	from datetime import datetime
+	now = datetime.now() # current date and time
+	date_time = now.strftime("%Y-%m-%d %H:%M:%S")
+	key =f'{bl}'
+	bl_data = db.get(key)
+	if bl_data:
+		# if found then return
+		print(f'{date_time} Getting BL :{bl} from cache')
+		Objects = json.loads(bl_data)
+	else:
+		print(f'{date_time} Getting BL :{bl}')
+		cursor_ctcs,cursor_nsw = init_db()
+		Objects = db_nsw_imp_get_bl(bl)
+		# save db
+		ttl=60*3 #3 mins
+		db.set(bl,json.dumps(Objects,cls=CustomJSONEncoder))
+		db.expire(bl, ttl)
+	
 	response=jsonify(Objects)
 	response.headers.add('Access-Control-Allow-Origin', '*')
 	return response
@@ -349,7 +387,7 @@ def db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,number,mode='full'):
 	rows = cursor_nsw.fetchone()
 	voy=''
 	if rows :
-		print(f'VOY : {rows[0]}')
+		# print(f'VOY : {rows[0]}')
 		voy = rows[0]
 	else :
 		# Change return null to return [] , on Feb 6,2021

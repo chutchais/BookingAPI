@@ -522,6 +522,11 @@ def db_nsw_imp_get_container_bl(cursor_ctcs,cursor_nsw,number,bl):
 
 		# Check Payment (paid) by Chutchai on March 2,2021
 		dict_data.update({'paid': is_paid})
+
+		# Added on March 25,2021 -- To remove white space from container and bill_of_landing
+		dict_data['bill_of_landing']=dict_data['bill_of_landing'].strip()
+		dict_data['container']=dict_data['container'].strip()
+
 		return dict_data
 
 def db_nsw_imp_get_bl(number):

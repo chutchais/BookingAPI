@@ -98,9 +98,10 @@ def db_ctcs_get_blocking(container):
     rows = cursor_ctcs.fetchall()
     columns = [column[0].lower() for column in cursor_ctcs.description]
     # print(columns, file=sys.stdout)
+    results = []
     if rows:
         # print('Found Data ' + hid , file=sys.stdout)
-        results = []
+        
         for row in rows:
             clean_d = { k:v.strip() for k, v in zip(columns,row) if isinstance(v, str)}
             
@@ -109,7 +110,7 @@ def db_ctcs_get_blocking(container):
             results.append(dict(clean_d))
 
         # print(results, file=sys.stdout)
-        return results
+    return results
 
 
 

@@ -223,7 +223,7 @@ def db_ctcs_imp_get_discharge_info(cursor_ctcs,number,voy,mode='full'):
 		date_in_str = str(clean_d.get("date_in", None))
 		time_in_str = str(clean_d.get("time_in", None))
 		date_in_date = datetime(int(date_in_str[:4]),int(date_in_str[4:6]),int(date_in_str[-2:]))
-		# print(date_in_str,time_in_str)
+		print(date_in_str,time_in_str)
 		if len(time_in_str) == 6 :
 			hour_in = int(time_in_str[:2])
 			minute_in = int(time_in_str[2:4])
@@ -244,6 +244,10 @@ def db_ctcs_imp_get_discharge_info(cursor_ctcs,number,voy,mode='full'):
 			hour_in = 0
 			minute_in = 0
 			second_in = int(time_in_str[-2:])
+		if len(time_in_str) == 1 :
+			hour_in = 0
+			minute_in = 0
+			second_in = int(time_in_str[-1:])
 		date_in_date=date_in_date.replace(hour=hour_in,minute=minute_in,second=second_in)
 		clean_d.update({'datetime_in' :date_in_date })
 			

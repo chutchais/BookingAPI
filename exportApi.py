@@ -207,6 +207,21 @@ def db_ctcs_get_gatein(bzid01,cursor_ctcs):
 		hour_in = 0
 		minute_in = int(time_in_str[:2])
 		second_in = int(time_in_str[-2:])
+	
+	# Added on April 12,2021
+	if len(time_in_str) == 3 :
+		hour_in = 0
+		minute_in = int(time_in_str[:1])
+		second_in = int(time_in_str[-2:])
+	if len(time_in_str) == 2 :
+		hour_in = 0
+		minute_in = 0
+		second_in = int(time_in_str[-2:])
+	if len(time_in_str) == 1 :
+		hour_in = 0
+		minute_in = 0
+		second_in = int(time_in_str[-1:])
+
 	date_in_date=date_in_date.replace(hour=hour_in,minute=minute_in,second=second_in)
 	clean_d.update({'datetime_in' :date_in_date })
 	del clean_d['time_in']
@@ -262,6 +277,12 @@ def db_ctcs_get_load(hdid10,cursor_ctcs):
 		hour_in = 0
 		minute_in = 0
 		second_in = int(time_in_str[-2:])
+	# Added April 12,2021
+	if len(time_in_str) == 1 :
+		hour_in = 0
+		minute_in = 0
+		second_in = int(time_in_str[-1:])
+
 	date_in_date = date_in_date.replace(hour=hour_in,minute=minute_in,second=second_in)
 	clean_d.update({'datetime_out' :date_in_date })
 	del clean_d['time_out']
@@ -468,6 +489,12 @@ def db_ctcs_exp_get_booking(booking):
 				hour_in = 0
 				minute_in = 0
 				second_in = int(time_in_str[-2:])
+			# Added on APril 12,2021
+			if len(time_in_str) == 1 :
+				hour_in = 0
+				minute_in = 0
+				second_in = int(time_in_str[-1:])
+
 			date_in_date=date_in_date.replace(hour=hour_in,minute=minute_in,second=second_in)
 			clean_d.update({'datetime_in' :date_in_date })
 			clean_d.update({'pod' :pod })
@@ -635,6 +662,13 @@ def db_ctcs_exp_get_container(container):
 				hour_in = 0
 				minute_in = 0
 				second_in = int(time_in_str[-2:])
+			
+			# Added on April 12,2021
+			if len(time_in_str) == 1 :
+				hour_in = 0
+				minute_in = 0
+				second_in = int(time_in_str[-1:])
+
 			date_in_date=date_in_date.replace(hour=hour_in,minute=minute_in,second=second_in)
 			clean_d.update({'datetime_in' :date_in_date })
 			clean_d.update({'pod' :pod })

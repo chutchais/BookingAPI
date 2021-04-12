@@ -223,7 +223,7 @@ def db_ctcs_imp_get_discharge_info(cursor_ctcs,number,voy,mode='full'):
 		date_in_str = str(clean_d.get("date_in", None))
 		time_in_str = str(clean_d.get("time_in", None))
 		date_in_date = datetime(int(date_in_str[:4]),int(date_in_str[4:6]),int(date_in_str[-2:]))
-		print(date_in_str,time_in_str)
+		# print(date_in_str,time_in_str)
 		if len(time_in_str) == 6 :
 			hour_in = int(time_in_str[:2])
 			minute_in = int(time_in_str[2:4])
@@ -244,6 +244,7 @@ def db_ctcs_imp_get_discharge_info(cursor_ctcs,number,voy,mode='full'):
 			hour_in = 0
 			minute_in = 0
 			second_in = int(time_in_str[-2:])
+		# Added on April 12,2021
 		if len(time_in_str) == 1 :
 			hour_in = 0
 			minute_in = 0
@@ -296,6 +297,11 @@ def db_ctcs_imp_get_out_info(cursor_ctcs,number,handleid):
 			hour_out = 0
 			minute_out = 0
 			second_out = int(time_out_str[-2:])
+			# Added on April 12,2021
+		if len(time_out_str) == 1 :
+			hour_out = 0
+			minute_out = 0
+			second_out = int(time_out_str[-1:])
 		date_out_date = date_out_date.replace(hour=hour_out,minute=minute_out,second=second_out)
 		clean_d.update({'datetime_out' :date_out_date })
 		return dict(clean_d)

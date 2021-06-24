@@ -137,8 +137,11 @@ def db_ctcs_get_booking_invoice(order):
         for row in rows:
             clean_d = { k:v.strip() for k, v in zip(columns,row) if isinstance(v, str)}
             
-            clean_date = { k:v for k, v in zip(columns,row) if isinstance(v, decimal.Decimal)}
+            # Modify on June 24,2021 -- To fix receive number consist .0
+            clean_date = { k:v for k, v in zip(columns,row) if k=='issue_date'}
             clean_d.update(clean_date)
+            clean_receive = { k:str(v) for k, v in zip(columns,row) if k=='receive'}
+            clean_d.update(clean_receive)
             results.append(dict(clean_d))
 
         # print(results, file=sys.stdout)

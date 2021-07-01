@@ -451,7 +451,7 @@ def db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,number,mode='full'):
 			container_status = dis_info['container_status']
 			# print (f'Container_status is {container_status} --Before')
 			if container_status in ['LCL','CFS','LCL/CFS'] :
-				# print (f'containr_status is {container_status}')
+				# print (f'Containr_status is {container_status} and set to 9')
 				dict_data.update({'containerdetail_status': '9'})
 			# End-----
 

@@ -251,6 +251,8 @@ def db_ctcs_imp_get_discharge_info(cursor_ctcs,number,voy,mode='full'):
 			second_in = int(time_in_str[-1:])
 		date_in_date=date_in_date.replace(hour=hour_in,minute=minute_in,second=second_in)
 		clean_d.update({'datetime_in' :date_in_date })
+
+		# Added on July 1,2021 -- to set containerdetails_status to 9 ,if container_status = 8 or 7
 			
 		# print (date_in_date)
 		return dict(clean_d)
@@ -444,6 +446,15 @@ def db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,number,mode='full'):
 			# Get Discharge info
 			voy = dict_data['voy']
 			dis_info = db_ctcs_imp_get_discharge_info(cursor_ctcs,number,voy,mode)
+			
+			# Added on July 1,2021 -- to set containerdetails_status to 9 ,if container_status = 8 or 7
+			container_status = dis_info['container_status']
+			# print (f'Container_status is {container_status} --Before')
+			if container_status in ['LCL','CFS','LCL/CFS'] :
+				# print (f'containr_status is {container_status}')
+				dict_data.update({'containerdetail_status': '9'})
+			# End-----
+
 			# print(dis_info)
 			if dis_info != None :
 				handle_id = dis_info['hdra03']

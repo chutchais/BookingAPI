@@ -448,11 +448,12 @@ def db_nsw_imp_get_container(cursor_ctcs,cursor_nsw,number,mode='full'):
 			dis_info = db_ctcs_imp_get_discharge_info(cursor_ctcs,number,voy,mode)
 			
 			# Added on July 1,2021 -- to set containerdetails_status to 9 ,if container_status = 8 or 7
-			container_status = dis_info['container_status']
-			# print (f'Container_status is {container_status} --Before')
-			if container_status in ['LCL','CFS','LCL/CFS'] :
-				# print (f'Containr_status is {container_status} and set to 9')
-				dict_data.update({'containerdetail_status': '9'})
+			# Fixed on July 5,2021 -- To check if Contaienr is discharged.
+			if dis_info:
+				container_status = dis_info['container_status']
+				if container_status in ['LCL','CFS','LCL/CFS'] :
+					# print (f'Containr_status is {container_status} and set to 9')
+					dict_data.update({'containerdetail_status': '9'})
 			# End-----
 
 			# print(dis_info)

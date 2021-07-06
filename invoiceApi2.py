@@ -49,9 +49,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# app = Flask(__name__)
-# app.json_encoder = CustomJSONEncoder
-# app.debug = True
 
 #setup db connection to sql server
 def init_db():
@@ -82,8 +79,7 @@ def get_receive_by_invoice_info(invoice:str):
     print(f'Start get Receive of {invoice}')
     Objects = db_ctcs_get_receive_by_invoice(invoice)
     json_compatible_item_data  = jsonable_encoder(Objects)
-    print(number2text('702.50','en'))
-    print(number2text('702.50','th'))
+    
     return JSONResponse(content=json_compatible_item_data )
 
 @app.get("/invoice/{invoice}/detail")
@@ -93,24 +89,14 @@ def get_receive_by_invoice_info(invoice:str):
     json_compatible_item_data  = jsonable_encoder(Objects)
     return JSONResponse(content=json_compatible_item_data )
 
-
-# @app.get("/invoice/{invoice}")
-# def get_receive_invoice_by_order(invoice:str):
-#     print(f'Start get Receive of {invoice}')
-#     Objects = db_ctcs_get_receive_by_invoice(invoice)
-#     json_compatible_item_data  = jsonable_encoder(Objects)
-#     return JSONResponse(content=json_compatible_item_data )
-
-# # db_ctcs_get_receive_detail
-# @app.get("/receive/{receive}")
-# def get_receive_invoice_by_order(receive:str):
-#     print(f'Start get Receive Detail of {receive}')
-#     Objects = db_ctcs_get_receive_detail(receive)
-#     json_compatible_item_data  = jsonable_encoder(Objects)
-#     return JSONResponse(content=json_compatible_item_data )
-# # End Routing
-
-
+def remove_dupe_dicts(l):
+  return [
+    dict(t) 
+    for t in {
+      tuple(d.items())
+      for d in l
+    }
+  ]
 
 
 def db_ctcs_get_booking_invoice(order):
@@ -154,12 +140,19 @@ def db_ctcs_get_receive_by_invoice(invoice):
     from datetime import datetime
     from datetime import timedelta
     import decimal
-    #import datetime
-    
+
     cursor_ctcs = init_db()
-    cursor_ctcs.execute("select * "\
+    cursor_ctcs.execute("select ORRF93 booking,NFK093 invoice,NRC093 receive,"\
+                    "DFK093 issue_date,"\
+                    "CUIDD9 customer_code,RKNMD9 addr1,RKN2D9 addr2,DRSTD9 addr3,DRWPD9 addr4,"\
+                    "DRPSD9 tax,DRLDD9 branch,"\
+                    "CNID94 container,CNLL94 size "
                     "from LCB1DAT.ETAX_INV  "\
                     "where NFK093='" + invoice + "'")
+    
+    # cursor_ctcs.execute("select * "
+    #                 "from LCB1DAT.ETAX_INV  "\
+    #                 "where NFK093='" + invoice + "'")
 
     rows = cursor_ctcs.fetchall()
     columns = [column[0].lower() for column in cursor_ctcs.description]
@@ -167,15 +160,26 @@ def db_ctcs_get_receive_by_invoice(invoice):
     if rows:
         # print('Found Data ' + hid , file=sys.stdout)
         results = []
+        containers = []
         for row in rows:
+            # print(row)
             clean_d = { k:v.strip() for k, v in zip(columns,row) if isinstance(v, str)}
-            
+            # print(clean_d)
             clean_date = { k:v for k, v in zip(columns,row) if isinstance(v, decimal.Decimal)}
             clean_d.update(clean_date)
             results.append(dict(clean_d))
+            containers.append({'container':clean_d['container'],
+                                'booking':clean_d['booking'],
+                                'size':clean_d['size']})
+            # break
 
         # print(results, file=sys.stdout)
-        return results
+        # print(containers)
+        # containers = list(set(containers))
+        containers = remove_dupe_dicts(containers)
+        results[0]['containers']=containers
+        results[0]['charges']=db_ctcs_get_receivedetail_by_invoice(invoice)
+        return results[0]
 
 def db_ctcs_get_receivedetail_by_invoice(invoice):
     from datetime import datetime
@@ -184,9 +188,12 @@ def db_ctcs_get_receivedetail_by_invoice(invoice):
     #import datetime
     
     cursor_ctcs = init_db()
-    cursor_ctcs.execute("select * "\
+    cursor_ctcs.execute("select IDTXUD tariff_name1 ,IDT3UD tarliff_name2,"\
+                    "sum(AEHD0C) qty,max(TARF0C) unit_price,sum(TAR10C) amount,max(MTKD0C) currency,"\
+                    "max(BOF10C) total_charge,max(BBT10C) vat,max(BTF00C) grand_total,max(USPCUF) user "
                     "from LCB1SRC.ETAXDETAIL  "\
-                    "where NFK00C='" + invoice + "'")
+                    "where NFK00C='" + invoice + "' "\
+                    "group by IDTXUD,IDT3UD ")
 
     rows = cursor_ctcs.fetchall()
     columns = [column[0].lower() for column in cursor_ctcs.description]
@@ -202,7 +209,34 @@ def db_ctcs_get_receivedetail_by_invoice(invoice):
             results.append(dict(clean_d))
 
         # print(results, file=sys.stdout)
-        return results
+        # results[0]
+        total_text_en = number2text(str(results[0]['grand_total']),'en')
+        total_text_th = number2text(str(results[0]['grand_total']),'th')
+        final_result={'currency':results[0]['currency'],
+                    'total_charge':results[0]['total_charge'],
+                    'vat':results[0]['vat'],
+                    'grand_total':results[0]['grand_total'],
+                    'grand_text_en':total_text_en,
+                    'grand_text_thai':total_text_th,
+                    'user':results[0]['user'] }
+        final_result['details'] = reorder_tariff(results)
+        return final_result
+
+def reorder_tariff(tariffs):
+    # for tariff in tariffs:
+    new_tariff =[]
+    tariff_ix = 0
+    # Find tariff that consist of 'LIFT'
+    for i, tariff in enumerate(tariffs):
+        if 'LIFT' in tariff['tariff_name1']:
+            new_tariff.append(tariff)
+            tariff_ix=i
+            break
+    
+    for i, tariff in enumerate(tariffs):
+        if i != tariff_ix:
+            new_tariff.append(tariff)
+    return new_tariff
 
 def number2text(number_str:str,lang:str):
     from num2words import num2words
@@ -210,50 +244,10 @@ def number2text(number_str:str,lang:str):
         number_arry = number_str.split('.')
         baht_str = f"{num2words(number_arry[0],lang='en')} BAHT"
         if len(number_arry)>1:
-            satang_str = f"AND {num2words(number_arry[1],lang='en')} STANG"
-        str = f'{baht_str} {satang_str}'
+            # print (number_arry[1])
+            satang_str = f" AND {num2words(number_arry[1],lang='en')} STANG"
+            satang_str = '' if (number_arry[1] == '00' or number_arry[1] == '0' or number_arry[1] == '') else satang_str
+        str = f'{baht_str}{satang_str} ONLY'
     else :
         str = num2words(number_str,to='currency',lang='th')
     return str.upper()
-
-#    cursor_ctcs.execute("select ORRF93 as booking,"\
-#                         "CNID94 as container,"\
-#                         "CNLL94 as container_size,"\
-#                         "CNBT94 as container_full,"
-#                         "NFK093 as invoice,"\
-#                         "NRC093 as receive,"\
-#                         "AMNT94 as amount,"\
-#                         "CUIDD9 as customer_code,"\
-#                         "RKNMD9 as customer_name,"\
-#                         "DRSTD9 as customer_addr1,"\
-#                         "DRWPD9 as customer_addr2,"\
-#                         "DRLDD9 as customer_branch,"\
-#                         "DRPSD9 as customer_tax,"\
-#                         "DFK093 as issue_date "\
-
-# def db_ctcs_get_receive_detail(receive):
-#     from datetime import datetime
-#     from datetime import timedelta
-#     import decimal
-#     #import datetime
-    
-#     cursor_ctcs = init_db()
-#     cursor_ctcs.execute("SELECT * "\
-#                     "FROM LCB1SRC.ETAXDETAIL WHERE NFK00C = '" + receive +"'")
-
-#     rows = cursor_ctcs.fetchall()
-#     columns = [column[0].lower() for column in cursor_ctcs.description]
-#     # print(columns, file=sys.stdout)
-#     if rows:
-#         # print('Found Data ' + hid , file=sys.stdout)
-#         results = []
-#         for row in rows:
-#             clean_d = { k:v.strip() for k, v in zip(columns,row) if isinstance(v, str)}
-            
-#             clean_date = { k:v for k, v in zip(columns,row) if isinstance(v, decimal.Decimal)}
-#             clean_d.update(clean_date)
-#             results.append(dict(clean_d))
-
-#         # print(results, file=sys.stdout)
-#         return results
-

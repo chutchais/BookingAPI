@@ -165,8 +165,11 @@ def db_ctcs_get_receive_by_invoice(invoice):
             # print(row)
             clean_d = { k:v.strip() for k, v in zip(columns,row) if isinstance(v, str)}
             # print(clean_d)
-            clean_date = { k:v for k, v in zip(columns,row) if isinstance(v, decimal.Decimal)}
+            clean_date = { k:str(v) for k, v in zip(columns,row) if isinstance(v, decimal.Decimal)}
+            clean_size= { k:int(v) for k, v in zip(columns,row) if k=='size'}
+
             clean_d.update(clean_date)
+            clean_d.update(clean_size)
             results.append(dict(clean_d))
             containers.append({'container':clean_d['container'],
                                 'booking':clean_d['booking'],
@@ -205,6 +208,7 @@ def db_ctcs_get_receivedetail_by_invoice(invoice):
             clean_d = { k:v.strip() for k, v in zip(columns,row) if isinstance(v, str)}
             
             clean_date = { k:v for k, v in zip(columns,row) if isinstance(v, decimal.Decimal)}
+           
             clean_d.update(clean_date)
             results.append(dict(clean_d))
 

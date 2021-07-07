@@ -227,6 +227,15 @@ def db_ctcs_get_receivedetail_by_invoice(invoice):
         return final_result
 
 def reorder_tariff(tariffs):
+    # Edit on July 7,2021 -- In case there is no 'LIFT' in tarliff
+    found = False
+    for tariff in tariffs:
+        if 'LIFT' in tariff['tariff_name1']:
+            found = True
+
+    if not found :
+        return tariffs
+
     # for tariff in tariffs:
     new_tariff =[]
     tariff_ix = 0
@@ -236,6 +245,7 @@ def reorder_tariff(tariffs):
             new_tariff.append(tariff)
             tariff_ix=i
             break
+
     
     for i, tariff in enumerate(tariffs):
         if i != tariff_ix:

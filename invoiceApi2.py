@@ -146,7 +146,8 @@ def db_ctcs_get_receive_by_invoice(invoice):
                     "DFK093 issue_date,"\
                     "CUIDD9 customer_code,RKNMD9 addr1,RKN2D9 addr2,DRSTD9 addr3,DRWPD9 addr4,"\
                     "DRPSD9 tax,DRLDD9 branch,"\
-                    "CNID94 container,CNLL94 size "
+                    "CNID94 container,CNLL94 size,"\
+                    "HDDT94 paid_until "
                     "from LCB1DAT.ETAX_INV  "\
                     "where NFK093='" + invoice + "'")
     

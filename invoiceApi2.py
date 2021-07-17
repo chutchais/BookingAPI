@@ -147,7 +147,7 @@ def db_ctcs_get_receive_by_invoice(invoice):
                     "CUIDD9 customer_code,RKNMD9 addr1,RKN2D9 addr2,DRSTD9 addr3,DRWPD9 addr4,"\
                     "DRPSD9 tax,DRLDD9 branch,"\
                     "CNID94 container,CNLL94 size,"\
-                    "HDDT94 paid_until "
+                    "HDDT94 paid_until,FRMK93 terminal "
                     "from LCB1DAT.ETAX_INV  "\
                     "where NFK093='" + invoice + "'")
     
@@ -177,11 +177,12 @@ def db_ctcs_get_receive_by_invoice(invoice):
                                 'size':clean_d['size']})
             # break
 
-        # print(results, file=sys.stdout)
-        # print(containers)
-        # containers = list(set(containers))
         containers = remove_dupe_dicts(containers)
-        results[0]['containers']=containers
+        from operator import itemgetter
+        containers_sorted = sorted(containers, key=itemgetter('size'))
+        # containers_sorted = sorted(containers, key=itemgetter('container'))
+        # print(newlist)
+        results[0]['containers']=containers_sorted
         results[0]['charges']=db_ctcs_get_receivedetail_by_invoice(invoice)
         return results[0]
 
@@ -206,12 +207,12 @@ def db_ctcs_get_receivedetail_by_invoice(invoice):
                         "from ("\
                         "select IDTXUD tariff_name1 ,IDT3UD tariff_name2, "\
                             "max(AEHD0C) qty,max(TARF0C) unit_price,'0' amount,max(MTKD0C) currency,"\
-                            "max(BOF10C) total_charge,max(BBT10C) vat,max(BTF00C) grand_total,max(USPCUF) user "\
+                            "max(BOF10C) total_charge,max(BBT10C) vat,max(BTF00C) grand_total,max(USPCUF) user,VFID0C "\
                             "from LCB1SRC.ETAXDETAIL  "\
                             "where NFK00C='" + invoice + "' "\
                             "group by VFID0C,IDTXUD,IDT3UD,TARF0C "\
                         ") t "\
-                        "group by t.tariff_name1,t.tariff_name2,t.unit_price "\
+                        "group by t.tariff_name1,t.tariff_name2,t.unit_price,VFID0C "\
                         "order by t.tariff_name1,t.tariff_name2,t.unit_price")
 
     rows = cursor_ctcs.fetchall()

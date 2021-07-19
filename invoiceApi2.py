@@ -233,8 +233,17 @@ def db_ctcs_get_receivedetail_by_invoice(invoice):
     #                     "order by t.tariff_name1,t.tariff_name2,t.unit_price")
 
     # Modify on July 19,2021 -- To fix chareges ahow all record.
+    # cursor_ctcs.execute("select IDTXUD tariff_name1 ,IDT3UD tariff_name2, "\
+    #                         "sum(AEHD0C) qty,max(TARF0C) unit_price,sum(AEHD0C)*max(TARF0C) amount,max(MTKD0C) currency,"\
+    #                         "max(BOF10C) total_charge,max(BBT10C) vat,max(BTF00C) grand_total,max(USPCUF) user "\
+    #                         "from LCB1SRC.ETAXDETAIL  "\
+    #                         "where NFK00C='" + invoice + "' "\
+    #                         "group by IDTXUD,IDT3UD,TARF0C "\
+    #                         "order by IDTXUD,IDT3UD,TARF0C desc")
+
+    # if EENH0C = CNT -->sum(AEHD0C) , EENH0C= DAY -->max(AEHD0C) sum(AEHD0C),max(AEHD0C)
     cursor_ctcs.execute("select IDTXUD tariff_name1 ,IDT3UD tariff_name2, "\
-                            "sum(AEHD0C) qty,max(TARF0C) unit_price,sum(AEHD0C)*max(TARF0C) amount,max(MTKD0C) currency,"\
+                            "max(EENH0C) tariff_type,0 qty,sum(AEHD0C) cnt_qty,max(AEHD0C) day_qty,max(TARF0C) unit_price,max(TAR10C) amount,max(MTKD0C) currency,"\
                             "max(BOF10C) total_charge,max(BBT10C) vat,max(BTF00C) grand_total,max(USPCUF) user "\
                             "from LCB1SRC.ETAXDETAIL  "\
                             "where NFK00C='" + invoice + "' "\
@@ -251,6 +260,9 @@ def db_ctcs_get_receivedetail_by_invoice(invoice):
             clean_d = { k:v.strip() for k, v in zip(columns,row) if isinstance(v, str)}
             clean_date = { k:v for k, v in zip(columns,row) if isinstance(v, decimal.Decimal)}
             clean_d.update(clean_date)
+            # Added on July 19,2021 -- To update qty
+            clean_d['qty'] = clean_d['cnt_qty'] if clean_d['tariff_type'] == 'CNT' else clean_d['day_qty']
+            # -------------------------------------
             results.append(dict(clean_d))
 
         # Check Is it IMPORT?? , if yes ,we must have STORAGE charge

@@ -200,21 +200,47 @@ def db_ctcs_get_receivedetail_by_invoice(invoice):
     #                 "where NFK00C='" + invoice + "' and EENH0C='CNT' "\
     #                 "group by IDTXUD,IDT3UD,TARF0C")
 
-    cursor_ctcs.execute("select t.tariff_name1 ,t.tariff_name2,"\
-                        "sum(t.qty) qty ,max(t.unit_price) unit_price,sum(t.qty)*max(t.unit_price) amount,"\
-                        "max(t.currency) currency,max(t.total_charge) total_charge,max(t.vat) vat,max(t.grand_total) grand_total,"\
-                        "max(t.user) user "\
-                        "from ("\
-                        "select IDTXUD tariff_name1 ,IDT3UD tariff_name2, "\
-                            "max(AEHD0C) qty,max(TARF0C) unit_price,'0' amount,max(MTKD0C) currency,"\
-                            "max(BOF10C) total_charge,max(BBT10C) vat,max(BTF00C) grand_total,max(USPCUF) user,VFID0C "\
+# Comment on July 19,2021 -- Found Tariff details show all 
+    # cursor_ctcs.execute("select t.tariff_name1 ,t.tariff_name2,"\
+    #                     "sum(t.qty) qty ,max(t.unit_price) unit_price,sum(t.qty)*max(t.unit_price) amount,"\
+    #                     "max(t.currency) currency,max(t.total_charge) total_charge,max(t.vat) vat,max(t.grand_total) grand_total,"\
+    #                     "max(t.user) user "\
+    #                     "from ("\
+    #                     "select IDTXUD tariff_name1 ,IDT3UD tariff_name2, "\
+    #                         "max(AEHD0C) qty,max(TARF0C) unit_price,'0' amount,max(MTKD0C) currency,"\
+    #                         "max(BOF10C) total_charge,max(BBT10C) vat,max(BTF00C) grand_total,max(USPCUF) user,VFID0C "\
+    #                         "from LCB1SRC.ETAXDETAIL  "\
+    #                         "where NFK00C='" + invoice + "' "\
+    #                         "group by VFID0C,IDTXUD,IDT3UD,TARF0C "\
+    #                     ") t "\
+    #                     "group by t.tariff_name1,t.tariff_name2,t.unit_price,VFID0C "\
+    #                     "order by t.tariff_name1,t.tariff_name2,t.unit_price")
+
+    # PASSED verify---
+    # cursor_ctcs.execute("select t.tariff_name1 ,t.tariff_name2,"\
+    #                     "sum(t.qty) qty ,max(t.unit_price) unit_price,sum(t.qty)*max(t.unit_price) amount,"\
+    #                     "max(t.currency) currency,max(t.total_charge) total_charge,max(t.vat) vat,max(t.grand_total) grand_total,"\
+    #                     "max(t.user) user "\
+    #                     "from ("\
+    #                     "select IDTXUD tariff_name1 ,IDT3UD tariff_name2, "\
+    #                         "sum(AEHD0C) qty,max(TARF0C) unit_price,'0' amount,max(MTKD0C) currency,"\
+    #                         "max(BOF10C) total_charge,max(BBT10C) vat,max(BTF00C) grand_total,max(USPCUF) user "\
+    #                         "from LCB1SRC.ETAXDETAIL  "\
+    #                         "where NFK00C='" + invoice + "' "\
+    #                         "group by IDTXUD,IDT3UD,TARF0C "\
+    #                     ") t "\
+    #                     "group by t.tariff_name1,t.tariff_name2,t.unit_price "\
+    #                     "order by t.tariff_name1,t.tariff_name2,t.unit_price")
+
+    # Modify on July 19,2021 -- To fix chareges ahow all record.
+    cursor_ctcs.execute("select IDTXUD tariff_name1 ,IDT3UD tariff_name2, "\
+                            "sum(AEHD0C) qty,max(TARF0C) unit_price,sum(AEHD0C)*max(TARF0C) amount,max(MTKD0C) currency,"\
+                            "max(BOF10C) total_charge,max(BBT10C) vat,max(BTF00C) grand_total,max(USPCUF) user "\
                             "from LCB1SRC.ETAXDETAIL  "\
                             "where NFK00C='" + invoice + "' "\
-                            "group by VFID0C,IDTXUD,IDT3UD,TARF0C "\
-                        ") t "\
-                        "group by t.tariff_name1,t.tariff_name2,t.unit_price,VFID0C "\
-                        "order by t.tariff_name1,t.tariff_name2,t.unit_price")
-
+                            "group by IDTXUD,IDT3UD,TARF0C "\
+                            "order by IDTXUD,IDT3UD,TARF0C desc")
+    
     rows = cursor_ctcs.fetchall()
     
     columns = [column[0].lower() for column in cursor_ctcs.description]

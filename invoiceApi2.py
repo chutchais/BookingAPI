@@ -276,6 +276,23 @@ def db_ctcs_get_receivedetail_by_invoice(invoice,container=1):
             if container == 1 :
                 clean_d['qty'] = clean_d['cnt_qty'] if clean_d['tariff_type'] == 'CNT' else clean_d['day_qty']
             # -------------------------------------
+            # Added on July 20,2021 -- To skip if tariff is wrong charge
+            if 'LIFT ON CHARGE' in clean_d['tariff_name1'] :
+                if clean_d['tariff_name2'] =="Container(s) full 20'" and \
+                        clean_d["unit_price"] != 670 :
+                    continue
+                if clean_d['tariff_name2'] =="Container(s) full 40'" and \
+                        clean_d["unit_price"] != 1000 :
+                    continue
+                
+            if 'RE-LOCATION CHARGE 307' in clean_d['tariff_name1'] :
+                if clean_d['tariff_name2'] =="Container(s) full 20'" and \
+                        clean_d["unit_price"] != 300 :
+                    continue
+                if clean_d['tariff_name2'] =="Container(s) full 40'" and \
+                        clean_d["unit_price"] != 510 :
+                    continue
+            # ----------------------------------------------------------
             results.append(dict(clean_d))
 
         # Check Is it IMPORT?? , if yes ,we must have STORAGE charge

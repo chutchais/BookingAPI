@@ -250,17 +250,36 @@ def db_ctcs_get_receivedetail_by_invoice(invoice,container=1):
                                 "max(BOF10C) total_charge,max(BBT10C) vat,max(BTF00C) grand_total,max(USPCUF) user,max(NSD00C) item_no "\
                                 "from LCB1SRC.ETAXDETAIL  "\
                                 "where NFK00C='" + invoice + "' "\
-                                "group by IDTXUD,IDT3UD,TARF0C ")
+                                "group by IDTXUD,IDT3UD,TARF0C "\
+                                "order by item_no")
     
     #More than one container
     if container > 1 :
-        cursor_ctcs.execute("select IDTXUD tariff_name1 ,IDT3UD tariff_name2, "\
+        # cursor_ctcs.execute("select IDTXUD tariff_name1 ,IDT3UD tariff_name2, "\
+        #                         "max(EENH0C) tariff_type,sum(AEHD0C) qty,sum(AEHD0C) cnt_qty,max(AEHD0C) day_qty,max(TARF0C) unit_price,"\
+        #                         "sum(AEHD0C)*max(TARF0C) amount,max(MTKD0C) currency,"\
+        #                         "max(BOF10C) total_charge,max(BBT10C) vat,max(BTF00C) grand_total,max(USPCUF) user,max(NSD00C) item_no "\
+        #                         "from LCB1SRC.ETAXDETAIL  "\
+        #                         "where NFK00C='" + invoice + "' "\
+        #                         "group by IDTXUD,IDT3UD,TARF0C ")
+
+        cursor_ctcs.execute("select t.tariff_name1 ,t.tariff_name2,"\
+                        "max(t.tariff_type) tariff_type,sum(t.qty) qty ,sum(t.cnt_qty) cnt_qty,sum(t.day_qty) day_qty,"\
+                        "max(t.unit_price) unit_price,sum(t.day_qty)*max(t.unit_price) amount,"\
+                        "max(t.currency) currency,max(t.total_charge) total_charge,max(t.vat) vat,max(t.grand_total) grand_total,"\
+                        "max(t.user) user,max(t.item_no) item_no "\
+                        "from ("\
+                                "select IDTXUD tariff_name1 ,IDT3UD tariff_name2, "\
                                 "max(EENH0C) tariff_type,sum(AEHD0C) qty,sum(AEHD0C) cnt_qty,max(AEHD0C) day_qty,max(TARF0C) unit_price,"\
                                 "sum(AEHD0C)*max(TARF0C) amount,max(MTKD0C) currency,"\
-                                "max(BOF10C) total_charge,max(BBT10C) vat,max(BTF00C) grand_total,max(USPCUF) user,max(NSD00C) item_no "\
+                                "max(BOF10C) total_charge,max(BBT10C) vat,max(BTF00C) grand_total,max(USPCUF) user,max(NSD00C) item_no,VFID0C "\
                                 "from LCB1SRC.ETAXDETAIL  "\
                                 "where NFK00C='" + invoice + "' "\
-                                "group by IDTXUD,IDT3UD,TARF0C ")
+                                "group by VFID0C,IDTXUD,IDT3UD,TARF0C "\
+                        ") t "\
+                        "group by t.tariff_name1,t.tariff_name2,t.unit_price "\
+                        "order by item_no")
+
     
     rows = cursor_ctcs.fetchall()
     
@@ -273,8 +292,11 @@ def db_ctcs_get_receivedetail_by_invoice(invoice,container=1):
             clean_date = { k:v for k, v in zip(columns,row) if isinstance(v, decimal.Decimal)}
             clean_d.update(clean_date)
             # Added on July 19,2021 -- To update qty
-            if container == 1 :
-                clean_d['qty'] = clean_d['cnt_qty'] if clean_d['tariff_type'] == 'CNT' else clean_d['day_qty']
+            # if container == 1 :
+            # Comment on July 21,2021 -- apply to all contaienr size
+            clean_d['qty'] = clean_d['cnt_qty'] if clean_d['tariff_type'] == 'CNT' else clean_d['day_qty']
+            
+            
             # -------------------------------------
             # Added on July 20,2021 -- To skip if tariff is wrong charge
             if 'LIFT ON CHARGE' in clean_d['tariff_name1'] :
